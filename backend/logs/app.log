@@ -29,3 +29,7 @@
 2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams/d563e07a-f436-4bce-b0c8-d0fdc9ec7660 "HTTP/1.1 200 OK"
 2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams "HTTP/1.1 200 OK"
 2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+2026-03-03 23:03:04 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 23:08:10 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 23:08:30 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 23:08:49 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f

@@ -127,15 +127,26 @@ export function CodeEditor({
         sx={{
           flex: 1,
           minHeight: 0,
+          position: "relative",
           overflow: "hidden",
-          "& .cm-editor": { height: "100%", fontSize: 14 },
-          "& .cm-scroller": { overflow: "auto" },
+          "& .cm-editor": { height: "100% !important", fontSize: 14 },
+          "& .cm-scroller": { overflow: "auto !important", overflowY: "scroll" },
           "& .cm-error-line": { backgroundColor: "rgba(211, 47, 47, 0.25)" },
         }}
       >
-        <CodeMirror
-          value={value}
-          height="100%"
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            "& > div": { height: "100%" },
+          }}
+        >
+          <CodeMirror
+            value={value}
+            height="100%"
           theme={darkMode ? "dark" : "light"}
           extensions={extensions}
           onChange={(v) => onChange(v)}
@@ -143,6 +154,7 @@ export function CodeEditor({
           basicSetup={{ lineNumbers: true }}
           placeholder="flowchart LR&#10;  A --> B"
         />
+        </Box>
       </Box>
       <Collapse in={!!parseError?.message && errorPanelOpen}>
         <Paper

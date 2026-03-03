@@ -388,8 +388,8 @@ export default function App() {
         </DialogActions>
       </Dialog>
 
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <Box sx={{ width: `${CODE_PANEL_WIDTH_PERCENT}%`, minWidth: 200, borderRight: 1, borderColor: "divider", display: "flex", flexDirection: "column" }}>
+      <Box sx={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
+        <Box sx={{ width: `${CODE_PANEL_WIDTH_PERCENT}%`, minWidth: 200, minHeight: 0, overflow: "hidden", borderRight: 1, borderColor: "divider", display: "flex", flexDirection: "column" }}>
           <Box sx={{ borderBottom: 1, borderColor: "divider", p: 0.5 }}>
             <FormControl size="small" fullWidth>
               <InputLabel>{t("app.diagramType")}</InputLabel>
@@ -429,7 +429,7 @@ export default function App() {
             onDocs={() => window.open("https://mermaid.js.org/intro/", "_blank")}
           />
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <DiagramView
             mmdCode={mmdContent}
             themeConfig={themeConfig}
