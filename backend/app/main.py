@@ -15,7 +15,7 @@ setup_logging()
 app = FastAPI(
     title="mmdGenerator",
     description="Mermaid diagram editor and exporter",
-    version="0.1.0",
+    version="0.1.1",
 )
 
 settings = get_settings()
