@@ -46,6 +46,7 @@ import type { DiagramListItem } from "./api/diagrams";
 
 const DRAWER_WIDTH = 280;
 const CODE_PANEL_WIDTH_PERCENT_DEFAULT = 38;
+const LAST_DIAGRAM_ID_KEY = "mmdGenerator.lastDiagramId";
 const CODE_PANEL_WIDTH_MIN_PERCENT = 20;
 const CODE_PANEL_WIDTH_MAX_PERCENT = 80;
 const DIVIDER_WIDTH_PX = 6;
@@ -68,6 +69,7 @@ export default function App() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [parseError, setParseError] = useState<ParseError | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(0);
+  const hasRestoredLastDiagramRef = useRef(false);
 
   const [codePanelWidthPercent, setCodePanelWidthPercent] = useState(CODE_PANEL_WIDTH_PERCENT_DEFAULT);
   const [isDraggingDivider, setIsDraggingDivider] = useState(false);
@@ -89,6 +91,33 @@ export default function App() {
   useEffect(() => {
     loadList();
   }, [loadList]);
+
+  useEffect(() => {
+    if (currentId) {
+      try {
+        localStorage.setItem(LAST_DIAGRAM_ID_KEY, currentId);
+      } catch {
+        // localStorage may be unavailable
+      }
+    }
+  }, [currentId]);
+
+  useEffect(() => {
+    if (diagramList.length === 0 || hasRestoredLastDiagramRef.current) return;
+    const lastId = localStorage.getItem(LAST_DIAGRAM_ID_KEY);
+    if (!lastId || !diagramList.some((d) => d.id === lastId)) return;
+    hasRestoredLastDiagramRef.current = true;
+    api
+      .getDiagram(lastId)
+      .then((d) => {
+        setCurrentId(d.id);
+        setTitle(d.title);
+        setMmdContent(d.mmd_content);
+      })
+      .catch(() => {
+        // Diagram was deleted or unavailable; ignore
+      });
+  }, [diagramList]);
 
   const handleNewDiagram = () => {
     setCurrentId(null);
