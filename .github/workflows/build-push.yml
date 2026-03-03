@@ -1,5 +1,6 @@
-# Build multi-arch Docker image and push to GHCR on release
-name: Build and Push to GHCR
+# Build multi-arch Docker image, push to GHCR, then deploy to Pi.
+# All steps run in order: deploy only starts after the image is available.
+name: Build and Deploy
 
 on:
   release:
@@ -42,3 +43,33 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  # Only runs after build has finished successfully (image is in GHCR).
+  deploy:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: [self-hosted, Linux, ARM64]
+    steps:
+      - name: Set version and image
+        id: vars
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          REPO="${{ github.repository }}"
+          IMAGE="ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]'):${VERSION}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+
+      - name: Deploy container
+        env:
+          IMAGE: ${{ steps.vars.outputs.image }}
+        run: |
+          set -e
+          echo "Pulling ${IMAGE}..."
+          docker pull "${IMAGE}"
+          docker stop mmdgenerator 2>/dev/null || true
+          docker rm mmdgenerator 2>/dev/null || true
+          docker run -d --name mmdgenerator --restart unless-stopped -p 8000:8000 \
+            -v mmdgenerator-data:/data -v mmdgenerator-logs:/logs \
+            -e MMD_DATA_DIR=/data -e LOG_DIR=/logs \
+            "${IMAGE}"
+          echo "Deployed ${IMAGE}"

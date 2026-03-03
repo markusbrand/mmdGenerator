@@ -16,8 +16,10 @@ docker run -d -p 8000:8000 \
 
 ### GHCR and GitHub Actions
 
-- **Build and push**: On release (published), the workflow `build-push.yml` builds the multi-arch image and pushes it to GitHub Container Registry (GHCR) with tags `:<version>` and `:latest`.
-- **Deploy to Pi**: The workflow `deploy.yml` runs on release **on a self-hosted runner installed on the Pi**. No SSH from the internet is needed: the Pi pulls jobs from GitHub and runs the deploy (docker pull + run) locally.
+On release (published), the workflow **Build and Deploy** (`build-push.yml`) runs two jobs in order:
+
+1. **Build**: Builds the multi-arch image and pushes it to GitHub Container Registry (GHCR) with tags `:<version>` and `:latest`.
+2. **Deploy**: Runs **only after the build job has finished successfully**, on a self-hosted runner on the Pi. The Pi then pulls the new image and runs the container. No SSH from the internet is needed.
 
 ### Raspberry Pi setup (for deploy workflow)
 
@@ -56,7 +58,7 @@ Do the following **on the Pi** (or from your PC via `ssh pi`).
 
 4. **Verify**
    - From the Pi: `docker pull ghcr.io/markusbrand/mmdgenerator:0.0.1` (replace with a real tag). It should pull without "denied".
-   - After publishing a release, the **Deploy to Pi** workflow will run on the Pi runner, pull the new image, and start the container on port 8000.
+   - After publishing a release, the **Deploy** job runs on the Pi runner (only after the image is in GHCR), pulls the new image, and starts the container on port 8000.
 
 **Reachability (for using the app):** The app listens on port 8000. From your LAN use `http://192.168.0.150:8000`. If the Pi is on Tailscale (e.g. 100.103.56.22), you can use `http://100.103.56.22:8000` from any device on your tailnet. If you expose the app via Cloudflare Tunnel (cloudflared), use the public URL configured in the tunnel.
 
