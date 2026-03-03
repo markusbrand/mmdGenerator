@@ -39,11 +39,20 @@ Do the following **on the Pi** (or from your PC via `ssh pi`).
 3. **Install the GitHub Actions self-hosted runner on the Pi**
    - On GitHub: repo **Settings** → **Actions** → **Runners** → **New self-hosted runner**.
    - Choose **Linux** and **ARM64** (for Raspberry Pi 5; use ARM64 or the architecture that matches your Pi).
-   - Follow the commands shown (download, configure, run). When asked for labels, add at least: `raspberry-pi` (and keep `self-hosted`, `linux`). The workflow uses `runs-on: [self-hosted, linux, raspberry-pi]`.
-   - Run the runner as a service so it stays up after reboot (GitHub’s instructions include `./svc.sh install` and `./svc.sh start`).
+   - Follow the commands shown (download, configure). When asked for additional labels you can press Enter (default labels `self-hosted`, `Linux`, `ARM64` are used by the workflow).
+   - Run the runner as a service so it stays up after reboot (see below). Do not rely on `./run.sh` in a terminal—it stops when you log out.
    - The runner must be able to run `docker` (install it as the same user that’s in the `docker` group, e.g. `pi`).
 
-   **Security (public repo):** GitHub warns that self-hosted runners on public repos can run code from fork pull requests. This deploy workflow is **release-only** (`if: github.event_name == 'release'`), so it never runs on PRs. To stay safe: **do not use the `raspberry-pi` runner in any other workflow that runs on `pull_request`** (e.g. keep CI on `ubuntu-latest`). If you prefer to avoid the warning entirely, use manual deploy with `scripts/deploy-on-pi.sh` instead of a self-hosted runner.
+   - **Install as a service** (so the runner keeps running after you log out or reboot):
+     ```bash
+     cd ~/actions-runner
+     sudo ./svc.sh install    # installs the runner as a systemd service
+     sudo ./svc.sh start      # starts it
+     sudo ./svc.sh status     # check it's running
+     ```
+     To stop or uninstall later: `sudo ./svc.sh stop`, `sudo ./svc.sh uninstall`.
+
+   **Security (public repo):** GitHub warns that self-hosted runners on public repos can run code from fork pull requests. This deploy workflow is **release-only** (`if: github.event_name == 'release'`), so it never runs on PRs. To stay safe: **do not use this runner in any other workflow that runs on `pull_request`** (e.g. keep CI on `ubuntu-latest`). If you prefer to avoid the warning entirely, use manual deploy with `scripts/deploy-on-pi.sh` instead of a self-hosted runner.
 
 4. **Verify**
    - From the Pi: `docker pull ghcr.io/markusbrand/mmdgenerator:0.0.1` (replace with a real tag). It should pull without "denied".

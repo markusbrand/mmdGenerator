@@ -12,7 +12,7 @@ jobs:
   deploy:
     # Only run for release events (never for pull_request from forks)
     if: github.event_name == 'release'
-    runs-on: [self-hosted, linux, raspberry-pi]
+    runs-on: [self-hosted, Linux, ARM64]
     steps:
       - name: Set version
         id: vars
