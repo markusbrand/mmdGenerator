@@ -14,16 +14,18 @@ jobs:
     if: github.event_name == 'release'
     runs-on: [self-hosted, Linux, ARM64]
     steps:
-      - name: Set version
+      - name: Set version and image
         id: vars
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          REPO="${{ github.repository }}"
+          IMAGE="ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]'):${VERSION}"
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
 
       - name: Deploy container
         env:
-          IMAGE: ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.version }}
+          IMAGE: ${{ steps.vars.outputs.image }}
         run: |
           set -e
           echo "Pulling ${IMAGE}..."
