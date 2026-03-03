@@ -20,6 +20,10 @@ import { exportPng, exportPdf } from "../api/diagrams";
 import { formatParseError } from "../utils/formatParseError";
 
 const CONTAINER_ID = "mermaid-container";
+const MIN_SCALE = 0.25;
+const MAX_SCALE = 10;
+const WHEEL_ZOOM_STEP = 0.1;
+const BUTTON_ZOOM_STEP = 0.25;
 
 interface DiagramViewProps {
   mmdCode: string;
@@ -96,7 +100,9 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    setScale((s) => Math.min(4, Math.max(0.25, s + (e.deltaY > 0 ? -0.1 : 0.1))));
+    setScale((s) =>
+      Math.min(MAX_SCALE, Math.max(MIN_SCALE, s + (e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP)))
+    );
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -193,10 +199,10 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
         >
           {t("app.downloadPdf")}
         </Button>
-        <IconButton size="small" onClick={() => setScale((s) => Math.min(4, s + 0.25))} title="Zoom in">
+        <IconButton size="small" onClick={() => setScale((s) => Math.min(MAX_SCALE, s + BUTTON_ZOOM_STEP))} title="Zoom in">
           <ZoomInIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => setScale((s) => Math.max(0.25, s - 0.25))} title="Zoom out">
+        <IconButton size="small" onClick={() => setScale((s) => Math.max(MIN_SCALE, s - BUTTON_ZOOM_STEP))} title="Zoom out">
           <ZoomOutIcon fontSize="small" />
         </IconButton>
         <IconButton size="small" onClick={handleFit} title="Fit">
