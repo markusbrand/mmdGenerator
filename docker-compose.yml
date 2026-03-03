@@ -1,0 +1,18 @@
+# Local development: build and run single container
+# Apache-2.0 - mmdGenerator
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MMD_DATA_DIR=/data
+      - LOG_DIR=/logs
+    volumes:
+      - mmd-data:/data
+      - mmd-logs:/logs
+    restart: unless-stopped
+
+volumes:
+  mmd-data:
+  mmd-logs:

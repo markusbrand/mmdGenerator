@@ -1,0 +1,21 @@
+2026-03-03 21:11:22 | INFO     | app.services.diagram_service | Created diagram id=501629e2-b327-4f74-b2d7-695bc1d2ce1f title=Test
+2026-03-03 21:11:22 | INFO     | httpx | HTTP Request: POST http://testserver/api/diagrams "HTTP/1.1 201 Created"
+2026-03-03 21:11:22 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams/501629e2-b327-4f74-b2d7-695bc1d2ce1f "HTTP/1.1 200 OK"
+2026-03-03 21:11:22 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams "HTTP/1.1 200 OK"
+2026-03-03 21:11:22 | INFO     | httpx | HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+2026-03-03 21:32:42 | INFO     | app.services.diagram_service | Created diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f title=Untitled diagram
+2026-03-03 21:32:44 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:33:23 | INFO     | app.services.diagram_service | Created diagram id=5d6162c8-c268-4510-a4f1-076be77a5a7b title=Untitled diagram
+2026-03-03 21:33:25 | INFO     | app.services.diagram_service | Updated diagram id=5d6162c8-c268-4510-a4f1-076be77a5a7b
+2026-03-03 21:35:17 | INFO     | app.services.diagram_service | Created diagram id=e15be554-8a5f-4b78-a90b-68ffd4f28dc3 title=test
+2026-03-03 21:35:19 | INFO     | app.services.diagram_service | Updated diagram id=e15be554-8a5f-4b78-a90b-68ffd4f28dc3
+2026-03-03 21:35:24 | INFO     | app.services.diagram_service | Updated diagram id=5d6162c8-c268-4510-a4f1-076be77a5a7b
+2026-03-03 21:35:28 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:35:38 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:35:40 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:35:42 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:37:51 | INFO     | app.services.diagram_service | Updated diagram id=5d6162c8-c268-4510-a4f1-076be77a5a7b
+2026-03-03 21:40:09 | INFO     | app.services.diagram_service | Created diagram id=f88baa3a-7e58-4ff3-9ea2-0f7d540924d1 title=Untitled diagram
+2026-03-03 21:40:10 | INFO     | app.services.diagram_service | Updated diagram id=f88baa3a-7e58-4ff3-9ea2-0f7d540924d1
+2026-03-03 21:40:25 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
+2026-03-03 21:40:32 | INFO     | app.services.diagram_service | Updated diagram id=e15be554-8a5f-4b78-a90b-68ffd4f28dc3
