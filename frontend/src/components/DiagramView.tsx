@@ -16,7 +16,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
 import type { ThemeConfig } from "../config/themes";
-import { exportPng, exportPdf } from "../api/diagrams";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { formatParseError } from "../utils/formatParseError";
 
 const CONTAINER_ID = "mermaid-container";
@@ -133,10 +134,22 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
   };
 
   const handleDownloadPng = async () => {
-    if (!svg) return;
+    const containerEl = document.getElementById(CONTAINER_ID);
+    if (!containerEl || !svg) return;
     setExporting(true);
     try {
-      const blob = await exportPng(svg, 2);
+      // Export from rendered DOM so browser fonts (and exact appearance) are used; server-side Cairo often misses text
+      const canvas = await html2canvas(containerEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false,
+      });
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png", 1)
+      );
+      if (!blob) throw new Error("PNG export failed");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -144,25 +157,36 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error(e);
+      console.error("PNG export failed:", e);
     } finally {
       setExporting(false);
     }
   };
 
   const handleDownloadPdf = async () => {
-    if (!svg) return;
+    const containerEl = document.getElementById(CONTAINER_ID);
+    if (!containerEl || !svg) return;
     setExporting(true);
     try {
-      const blob = await exportPdf(svg);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "diagram.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      const canvas = await html2canvas(containerEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const wMm = (canvas.width * 25.4) / 96;
+      const hMm = (canvas.height * 25.4) / 96;
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: [wMm, hMm],
+        hotfixes: ["px_scaling"],
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, wMm, hMm);
+      pdf.save("diagram.pdf");
     } catch (e) {
-      console.error(e);
+      console.error("PDF export failed:", e);
     } finally {
       setExporting(false);
     }

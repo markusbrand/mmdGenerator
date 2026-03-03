@@ -72,3 +72,18 @@ def test_export_pdf_svg_with_text_and_font() -> None:
     out = export_pdf(svg)
     assert isinstance(out, bytes)
     assert out[:4] == b"%PDF"
+
+
+def test_export_png_strips_font_face_and_renders_text() -> None:
+    """SVG with @font-face (e.g. from Mermaid) still renders text after stripping."""
+    svg = """<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80">
+      <style>
+      @font-face { font-family: 'Open Sans'; src: url(data:font/woff2;base64,abc); }
+      .label { font-family: 'Open Sans', sans-serif; }
+      </style>
+      <text x="100" y="40" class="label">Label</text>
+    </svg>"""
+    out = export_png(svg, scale=1)
+    assert isinstance(out, bytes)
+    assert len(out) > 0
+    assert out[:8] == b"\x89PNG\r\n\x1a\n"

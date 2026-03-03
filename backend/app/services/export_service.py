@@ -15,9 +15,18 @@ SCRIPT_OR_HREF = re.compile(r"<(script|a\s[^>]*\bhref\s*=)[^>]*>.*?</\1>", re.IG
 
 # Font used in container (fonts-dejavu-core); Mermaid uses "Open Sans" which is not available server-side
 EXPORT_FONT = "DejaVu Sans, sans-serif"
-# Match font-family: <value> in style attributes and <style> blocks so Cairo/Pango can render text
+# Match font-family: <value> (double-quoted, single-quoted, or unquoted) so Cairo can render text
 FONT_FAMILY_RE = re.compile(
-    r"(font-family\s*:\s*)(?:[^;}\"]|\"(?:[^\"]|\\\")*\")+",
+    r"(font-family\s*:\s*)(?:"
+    r'\"[^\"]*\"'
+    r"|\'[^\']*\'"
+    r"|[^;}\"]+"
+    r")+",
+    re.IGNORECASE,
+)
+# Strip @font-face blocks so Cairo doesn't try to load missing web fonts
+FONT_FACE_RE = re.compile(
+    r"@font-face\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}",
     re.IGNORECASE,
 )
 
@@ -27,9 +36,28 @@ def _sanitize_svg(svg: str) -> str:
     return SCRIPT_OR_HREF.sub("", svg)
 
 
+def _strip_font_face(svg: str) -> str:
+    """Remove @font-face rules so server-side renderer uses system fonts only."""
+    return FONT_FACE_RE.sub("", svg)
+
+
 def _normalize_fonts(svg: str) -> str:
     """Replace font-family with a font available in the container so text renders in PNG/PDF."""
     return FONT_FAMILY_RE.sub(rf"\g<1>{EXPORT_FONT}", svg)
+
+
+def _inject_default_font(svg: str) -> str:
+    """Ensure root SVG has a font so inherited text nodes render when Cairo has no other font."""
+    inject = f'<style>svg,text,tspan{{font-family:{EXPORT_FONT}}}</style>'
+    if inject in svg:
+        return svg
+    # Insert after the opening <svg> or <svg ...> tag
+    open_svg = re.compile(r"<svg(?:\s[^>]*)?>", re.IGNORECASE | re.DOTALL)
+    match = open_svg.search(svg)
+    if match:
+        end = match.end()
+        return svg[:end] + inject + svg[end:]
+    return svg
 
 
 def export_png(svg: str, scale: int = 2) -> bytes:
@@ -38,7 +66,9 @@ def export_png(svg: str, scale: int = 2) -> bytes:
     if len(svg.encode("utf-8")) > settings.export_max_svg_bytes:
         raise ValueError("SVG payload exceeds maximum size")
     scale = min(max(1, scale), settings.export_scale_max)
-    sanitized = _normalize_fonts(_sanitize_svg(svg))
+    sanitized = _inject_default_font(
+        _normalize_fonts(_strip_font_face(_sanitize_svg(svg)))
+    )
     buf = BytesIO()
     try:
         cairosvg.svg2png(bytestring=sanitized.encode("utf-8"), write_to=buf, scale=scale)
@@ -53,7 +83,9 @@ def export_pdf(svg: str) -> bytes:
     settings = get_settings()
     if len(svg.encode("utf-8")) > settings.export_max_svg_bytes:
         raise ValueError("SVG payload exceeds maximum size")
-    sanitized = _normalize_fonts(_sanitize_svg(svg))
+    sanitized = _inject_default_font(
+        _normalize_fonts(_strip_font_face(_sanitize_svg(svg)))
+    )
     buf = BytesIO()
     try:
         cairosvg.svg2pdf(bytestring=sanitized.encode("utf-8"), write_to=buf)
