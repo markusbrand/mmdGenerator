@@ -27,7 +27,8 @@
     "theme": "Theme",
     "untitledDiagram": "Untitled diagram",
     "projects": "Projects",
-    "personal": "Personal"
+    "personal": "Personal",
+    "resizePanels": "Drag to resize code and diagram panels"
   },
   "themes": {
     "default": "Default",

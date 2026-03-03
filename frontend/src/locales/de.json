@@ -27,7 +27,8 @@
     "theme": "Theme",
     "untitledDiagram": "Unbenanntes Diagramm",
     "projects": "Projekte",
-    "personal": "Persönlich"
+    "personal": "Persönlich",
+    "resizePanels": "Ziehen zum Ändern der Größe von Code- und Diagrammbereich"
   },
   "themes": {
     "default": "Standard",

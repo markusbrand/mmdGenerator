@@ -17,6 +17,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
 import type { ThemeConfig } from "../config/themes";
 import { exportPng, exportPdf } from "../api/diagrams";
+import { formatParseError } from "../utils/formatParseError";
 
 const CONTAINER_ID = "mermaid-container";
 
@@ -62,6 +63,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
     if (!mmdCode.trim()) {
       setSvg(null);
       setError(null);
+      onParseError?.("");
       return;
     }
     setError(null);
@@ -83,11 +85,12 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
         }
       })
       .catch((err: Error) => {
-        const msg = err.message ?? "Parse error";
-        setError(msg);
+        const rawMsg = err.message ?? "Parse error";
         setSvg(null);
-        const line = parseLineFromError(msg);
-        onParseError?.(msg, line);
+        const line = parseLineFromError(rawMsg);
+        const friendlyMessage = formatParseError(rawMsg, line);
+        setError(friendlyMessage);
+        onParseError?.(friendlyMessage, line);
       });
   }, [mmdCode, initMermaid, onParseError]);
 

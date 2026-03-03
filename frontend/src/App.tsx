@@ -45,7 +45,10 @@ import type { ThemeConfig } from "./config/themes";
 import type { DiagramListItem } from "./api/diagrams";
 
 const DRAWER_WIDTH = 280;
-const CODE_PANEL_WIDTH_PERCENT = 38;
+const CODE_PANEL_WIDTH_PERCENT_DEFAULT = 38;
+const CODE_PANEL_WIDTH_MIN_PERCENT = 20;
+const CODE_PANEL_WIDTH_MAX_PERCENT = 80;
+const DIVIDER_WIDTH_PX = 6;
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -65,6 +68,11 @@ export default function App() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [parseError, setParseError] = useState<ParseError | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(0);
+
+  const [codePanelWidthPercent, setCodePanelWidthPercent] = useState(CODE_PANEL_WIDTH_PERCENT_DEFAULT);
+  const [isDraggingDivider, setIsDraggingDivider] = useState(false);
+  const dividerDragRef = useRef<{ startX: number; startPercent: number } | null>(null);
+  const contentAreaRef = useRef<HTMLDivElement>(null);
 
   const themeConfig: ThemeConfig =
     MERMAID_THEMES.find((th) => th.id === themeId) ?? MERMAID_THEMES[0];
@@ -215,6 +223,40 @@ export default function App() {
     localStorage.setItem("mmd-theme", mode);
     window.dispatchEvent(new CustomEvent("theme-change", { detail: mode }));
   };
+
+  const handleDividerMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dividerDragRef.current = { startX: e.clientX, startPercent: codePanelWidthPercent };
+    setIsDraggingDivider(true);
+  };
+
+  useEffect(() => {
+    if (!isDraggingDivider) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const container = contentAreaRef.current;
+      const ref = dividerDragRef.current;
+      if (!container || !ref) return;
+      const rect = container.getBoundingClientRect();
+      const deltaPx = e.clientX - ref.startX;
+      const deltaPercent = (deltaPx / rect.width) * 100;
+      const newPercent = Math.min(
+        CODE_PANEL_WIDTH_MAX_PERCENT,
+        Math.max(CODE_PANEL_WIDTH_MIN_PERCENT, ref.startPercent + deltaPercent)
+      );
+      setCodePanelWidthPercent(newPercent);
+    };
+    const onMouseUp = () => {
+      setIsDraggingDivider(false);
+      dividerDragRef.current = null;
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDraggingDivider]);
 
   useEffect(() => {
     const stored = localStorage.getItem("mmd-theme") as "dark" | "light" | null;
@@ -388,8 +430,17 @@ export default function App() {
         </DialogActions>
       </Dialog>
 
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
-        <Box sx={{ width: `${CODE_PANEL_WIDTH_PERCENT}%`, minWidth: 200, minHeight: 0, overflow: "hidden", borderRight: 1, borderColor: "divider", display: "flex", flexDirection: "column" }}>
+      <Box
+        ref={contentAreaRef}
+        sx={{
+          display: "flex",
+          flex: 1,
+          overflow: "hidden",
+          minHeight: 0,
+          ...(isDraggingDivider && { cursor: "col-resize", userSelect: "none" }),
+        }}
+      >
+        <Box sx={{ width: `${codePanelWidthPercent}%`, minWidth: 200, flexShrink: 0, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <Box sx={{ borderBottom: 1, borderColor: "divider", p: 0.5 }}>
             <FormControl size="small" fullWidth>
               <InputLabel>{t("app.diagramType")}</InputLabel>
@@ -429,6 +480,20 @@ export default function App() {
             onDocs={() => window.open("https://mermaid.js.org/intro/", "_blank")}
           />
         </Box>
+        <Box
+          onMouseDown={handleDividerMouseDown}
+          sx={{
+            width: DIVIDER_WIDTH_PX,
+            flexShrink: 0,
+            minHeight: 0,
+            cursor: "col-resize",
+            bgcolor: "divider",
+            "&:hover": { bgcolor: "primary.main", opacity: 0.7 },
+            transition: "background-color 0.15s",
+          }}
+          aria-label={t("app.resizePanels")}
+          role="separator"
+        />
         <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <DiagramView
             mmdCode={mmdContent}
