@@ -19,3 +19,13 @@
 2026-03-03 21:40:10 | INFO     | app.services.diagram_service | Updated diagram id=f88baa3a-7e58-4ff3-9ea2-0f7d540924d1
 2026-03-03 21:40:25 | INFO     | app.services.diagram_service | Updated diagram id=e4100686-ce7d-45d1-bb81-e2bb0de31a3f
 2026-03-03 21:40:32 | INFO     | app.services.diagram_service | Updated diagram id=e15be554-8a5f-4b78-a90b-68ffd4f28dc3
+2026-03-03 21:50:01 | INFO     | app.services.diagram_service | Created diagram id=979a1755-60da-4ffa-8665-9e264bc41c32 title=Test
+2026-03-03 21:50:01 | INFO     | httpx | HTTP Request: POST http://testserver/api/diagrams "HTTP/1.1 201 Created"
+2026-03-03 21:50:01 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams/979a1755-60da-4ffa-8665-9e264bc41c32 "HTTP/1.1 200 OK"
+2026-03-03 21:50:01 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams "HTTP/1.1 200 OK"
+2026-03-03 21:50:01 | INFO     | httpx | HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+2026-03-03 21:50:42 | INFO     | app.services.diagram_service | Created diagram id=d563e07a-f436-4bce-b0c8-d0fdc9ec7660 title=Test
+2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: POST http://testserver/api/diagrams "HTTP/1.1 201 Created"
+2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams/d563e07a-f436-4bce-b0c8-d0fdc9ec7660 "HTTP/1.1 200 OK"
+2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/api/diagrams "HTTP/1.1 200 OK"
+2026-03-03 21:50:42 | INFO     | httpx | HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
