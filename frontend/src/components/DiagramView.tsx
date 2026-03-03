@@ -25,6 +25,19 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 10;
 const WHEEL_ZOOM_STEP = 0.1;
 const BUTTON_ZOOM_STEP = 0.25;
+const DIAGRAM_SCALE_KEY = "mmdGenerator.diagramScale";
+
+function loadDiagramScale(): number {
+  try {
+    const v = localStorage.getItem(DIAGRAM_SCALE_KEY);
+    if (v == null) return 1;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 1;
+    return Math.min(MAX_SCALE, Math.max(MIN_SCALE, n));
+  } catch {
+    return 1;
+  }
+}
 
 interface DiagramViewProps {
   mmdCode: string;
@@ -43,7 +56,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(loadDiagramScale);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
@@ -63,6 +76,14 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
   useEffect(() => {
     initMermaid();
   }, [initMermaid]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DIAGRAM_SCALE_KEY, String(scale));
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [scale]);
 
   useEffect(() => {
     if (!mmdCode.trim()) {

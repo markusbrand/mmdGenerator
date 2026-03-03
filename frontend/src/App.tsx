@@ -47,8 +47,24 @@ import type { DiagramListItem } from "./api/diagrams";
 const DRAWER_WIDTH = 280;
 const CODE_PANEL_WIDTH_PERCENT_DEFAULT = 38;
 const LAST_DIAGRAM_ID_KEY = "mmdGenerator.lastDiagramId";
+const CODE_PANEL_WIDTH_KEY = "mmdGenerator.codePanelWidthPercent";
 const CODE_PANEL_WIDTH_MIN_PERCENT = 20;
 const CODE_PANEL_WIDTH_MAX_PERCENT = 80;
+
+function loadCodePanelWidth(): number {
+  try {
+    const v = localStorage.getItem(CODE_PANEL_WIDTH_KEY);
+    if (v == null) return CODE_PANEL_WIDTH_PERCENT_DEFAULT;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return CODE_PANEL_WIDTH_PERCENT_DEFAULT;
+    return Math.min(
+      CODE_PANEL_WIDTH_MAX_PERCENT,
+      Math.max(CODE_PANEL_WIDTH_MIN_PERCENT, n)
+    );
+  } catch {
+    return CODE_PANEL_WIDTH_PERCENT_DEFAULT;
+  }
+}
 const DIVIDER_WIDTH_PX = 6;
 
 export default function App() {
@@ -71,7 +87,7 @@ export default function App() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(0);
   const hasRestoredLastDiagramRef = useRef(false);
 
-  const [codePanelWidthPercent, setCodePanelWidthPercent] = useState(CODE_PANEL_WIDTH_PERCENT_DEFAULT);
+  const [codePanelWidthPercent, setCodePanelWidthPercent] = useState(loadCodePanelWidth);
   const [isDraggingDivider, setIsDraggingDivider] = useState(false);
   const dividerDragRef = useRef<{ startX: number; startPercent: number } | null>(null);
   const contentAreaRef = useRef<HTMLDivElement>(null);
@@ -101,6 +117,14 @@ export default function App() {
       }
     }
   }, [currentId]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CODE_PANEL_WIDTH_KEY, String(codePanelWidthPercent));
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [codePanelWidthPercent]);
 
   useEffect(() => {
     if (diagramList.length === 0 || hasRestoredLastDiagramRef.current) return;
