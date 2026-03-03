@@ -11,6 +11,8 @@ RUN npm run build
 
 # ---- Backend ----
 FROM python:3.11-slim AS backend
+# Link image to repo so the package appears under the repo's Packages sidebar
+LABEL org.opencontainers.image.source=https://github.com/markusbrand/mmdGenerator
 WORKDIR /app
 
 # Cairo for cairosvg (PNG/PDF export)
