@@ -43,6 +43,8 @@ Do the following **on the Pi** (or from your PC via `ssh pi`).
    - Run the runner as a service so it stays up after reboot (GitHub’s instructions include `./svc.sh install` and `./svc.sh start`).
    - The runner must be able to run `docker` (install it as the same user that’s in the `docker` group, e.g. `pi`).
 
+   **Security (public repo):** GitHub warns that self-hosted runners on public repos can run code from fork pull requests. This deploy workflow is **release-only** (`if: github.event_name == 'release'`), so it never runs on PRs. To stay safe: **do not use the `raspberry-pi` runner in any other workflow that runs on `pull_request`** (e.g. keep CI on `ubuntu-latest`). If you prefer to avoid the warning entirely, use manual deploy with `scripts/deploy-on-pi.sh` instead of a self-hosted runner.
+
 4. **Verify**
    - From the Pi: `docker pull ghcr.io/markusbrand/mmdgenerator:0.0.1` (replace with a real tag). It should pull without "denied".
    - After publishing a release, the **Deploy to Pi** workflow will run on the Pi runner, pull the new image, and start the container on port 8000.

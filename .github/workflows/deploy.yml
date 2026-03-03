@@ -1,5 +1,7 @@
 # Deploy on Raspberry Pi when a release is published.
 # Runs on a self-hosted runner ON the Pi (no SSH from internet needed).
+# Security: only runs on release (not pull_request). Do not use the raspberry-pi
+# runner in any workflow that runs on pull_request (fork code could run on your Pi).
 name: Deploy to Pi
 
 on:
@@ -8,7 +10,8 @@ on:
 
 jobs:
   deploy:
-    # Run on the Pi: install a self-hosted runner there and use label "raspberry-pi"
+    # Only run for release events (never for pull_request from forks)
+    if: github.event_name == 'release'
     runs-on: [self-hosted, linux, raspberry-pi]
     steps:
       - name: Set version
