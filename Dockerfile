@@ -15,11 +15,12 @@ FROM python:3.11-slim AS backend
 LABEL org.opencontainers.image.source=https://github.com/markusbrand/mmdGenerator
 WORKDIR /app
 
-# Cairo for cairosvg (PNG/PDF export)
+# Cairo and fonts for cairosvg (PNG/PDF export); text needs a font Pango can find
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
+    fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .
