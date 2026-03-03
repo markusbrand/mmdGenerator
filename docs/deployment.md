@@ -17,9 +17,11 @@ docker run -d -p 8000:8000 \
 ### GHCR and GitHub Actions
 
 - **Build and push**: On release (published), the workflow `build-push.yml` builds the multi-arch image and pushes it to GitHub Container Registry (GHCR) with tags `:<version>` and `:latest`.
-- **Deploy to Pi**: The workflow `deploy.yml` runs on release and SSHs to the Raspberry Pi (using `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY` secrets). On the Pi it runs: pull the new image, stop/remove the old container, run the new container with the same volume and port.
+- **Deploy to Pi**: The workflow `deploy.yml` runs on release **on a self-hosted runner installed on the Pi**. No SSH from the internet is needed: the Pi pulls jobs from GitHub and runs the deploy (docker pull + run) locally.
 
 ### Raspberry Pi setup (for deploy workflow)
+
+The Pi is only on your LAN (e.g. 192.168.0.150). GitHub-hosted runners cannot reach it, so deployment uses a **self-hosted runner on the Pi**: the Pi registers with GitHub and runs the deploy job itself. No SSH secrets required.
 
 Do the following **on the Pi** (or from your PC via `ssh pi`).
 
@@ -31,22 +33,21 @@ Do the following **on the Pi** (or from your PC via `ssh pi`).
    Log out and back in so the `docker` group applies.
 
 2. **Make the GHCR package public** (recommended — no login on the Pi)
-   - On GitHub: go to **Your profile** (top-right) → **Packages**, or open the repo → **Packages** (right sidebar).
-   - Open the **mmdgenerator** package (image: `ghcr.io/markusbrand/mmdgenerator`).
-   - **Package settings** → **Danger Zone** (or **Change visibility**) → **Change visibility** → **Public**.
-   - After this, the Pi can pull the image without `docker login`.  
-   - *If you keep the package private:* on the Pi run `docker login ghcr.io` with a PAT that has `read:packages`.
+   - On GitHub: repo → **Packages** (right sidebar) → **mmdgenerator** → **Package settings** → **Change visibility** → **Public**.
+   - After this, the Pi can pull the image without `docker login`.
 
-3. **Allow GitHub Actions to SSH in**
-   - On your **PC/repo**: In GitHub → repo **Settings → Secrets and variables → Actions**, add:
-     - `SSH_HOST`: Pi hostname or IP (e.g. `raspberrypi` or `192.168.1.10`) that the runner can reach.
-     - `SSH_USER`: Linux user on the Pi that can run Docker (e.g. `pi`).
-     - `SSH_PRIVATE_KEY`: Private key content (no passphrase recommended for automation). The matching **public** key must be in the Pi user’s `~/.ssh/authorized_keys`.
-   - On the **Pi**, ensure `~/.ssh` and `~/.ssh/authorized_keys` exist and have correct permissions (`chmod 700 ~/.ssh`, `chmod 600 ~/.ssh/authorized_keys`). Append the public key for the deploy key to `authorized_keys`.
+3. **Install the GitHub Actions self-hosted runner on the Pi**
+   - On GitHub: repo **Settings** → **Actions** → **Runners** → **New self-hosted runner**.
+   - Choose **Linux** and **ARM64** (for Raspberry Pi 5; use ARM64 or the architecture that matches your Pi).
+   - Follow the commands shown (download, configure, run). When asked for labels, add at least: `raspberry-pi` (and keep `self-hosted`, `linux`). The workflow uses `runs-on: [self-hosted, linux, raspberry-pi]`.
+   - Run the runner as a service so it stays up after reboot (GitHub’s instructions include `./svc.sh install` and `./svc.sh start`).
+   - The runner must be able to run `docker` (install it as the same user that’s in the `docker` group, e.g. `pi`).
 
 4. **Verify**
-   - From the Pi: `docker pull ghcr.io/markusbrand/mmdgenerator:0.0.1` (use your repo path; replace `0.0.1` with a real tag). It should pull without "denied".
-   - After publishing a release, the **Deploy to Pi** workflow will SSH to the Pi, pull the new image, and start the container on port 8000.
+   - From the Pi: `docker pull ghcr.io/markusbrand/mmdgenerator:0.0.1` (replace with a real tag). It should pull without "denied".
+   - After publishing a release, the **Deploy to Pi** workflow will run on the Pi runner, pull the new image, and start the container on port 8000.
+
+**Reachability (for using the app):** The app listens on port 8000. From your LAN use `http://192.168.0.150:8000`. If the Pi is on Tailscale (e.g. 100.103.56.22), you can use `http://100.103.56.22:8000` from any device on your tailnet. If you expose the app via Cloudflare Tunnel (cloudflared), use the public URL configured in the tunnel.
 
 ### Deploy script (manual)
 

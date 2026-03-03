@@ -1,4 +1,5 @@
-# Deploy to Raspberry Pi via SSH when a release is published
+# Deploy on Raspberry Pi when a release is published.
+# Runs on a self-hosted runner ON the Pi (no SSH from internet needed).
 name: Deploy to Pi
 
 on:
@@ -7,29 +8,27 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Run on the Pi: install a self-hosted runner there and use label "raspberry-pi"
+    runs-on: [self-hosted, linux, raspberry-pi]
     steps:
-      - name: Set version and image
+      - name: Set version
         id: vars
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          echo "IMAGE=ghcr.io/${{ github.repository }}" >> $GITHUB_OUTPUT
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            IMAGE="${{ steps.vars.outputs.IMAGE }}"
-            VERSION="${{ steps.vars.outputs.VERSION }}"
-            docker pull "${IMAGE}:${VERSION}"
-            docker stop mmdgenerator 2>/dev/null || true
-            docker rm mmdgenerator 2>/dev/null || true
-            docker run -d --name mmdgenerator --restart unless-stopped -p 8000:8000 \
-              -v mmdgenerator-data:/data -v mmdgenerator-logs:/logs \
-              -e MMD_DATA_DIR=/data -e LOG_DIR=/logs \
-              "${IMAGE}:${VERSION}"
-            echo "Deployed ${IMAGE}:${VERSION}"
+      - name: Deploy container
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.version }}
+        run: |
+          set -e
+          echo "Pulling ${IMAGE}..."
+          docker pull "${IMAGE}"
+          docker stop mmdgenerator 2>/dev/null || true
+          docker rm mmdgenerator 2>/dev/null || true
+          docker run -d --name mmdgenerator --restart unless-stopped -p 8000:8000 \
+            -v mmdgenerator-data:/data -v mmdgenerator-logs:/logs \
+            -e MMD_DATA_DIR=/data -e LOG_DIR=/logs \
+            "${IMAGE}"
+          echo "Deployed ${IMAGE}"
