@@ -54,6 +54,7 @@ function parseLineFromError(message: string): number | undefined {
 export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: DiagramViewProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const runIdRef = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
   const [scale, setScale] = useState(loadDiagramScale);
@@ -92,6 +93,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
       onParseError?.("");
       return;
     }
+    const runId = ++runIdRef.current;
     setError(null);
     const el = document.getElementById(CONTAINER_ID);
     if (!el) return;
@@ -100,6 +102,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
     mermaid
       .render(id, mmdCode)
       .then(({ svg: svgStr }) => {
+        if (runId !== runIdRef.current) return;
         setSvg(svgStr);
         setError(null);
         onParseError?.("");
@@ -111,6 +114,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
         }
       })
       .catch((err: Error) => {
+        if (runId !== runIdRef.current) return;
         const rawMsg = err.message ?? "Parse error";
         setSvg(null);
         const line = parseLineFromError(rawMsg);

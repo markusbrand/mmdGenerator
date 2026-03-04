@@ -95,6 +95,10 @@ export default function App() {
   const themeConfig: ThemeConfig =
     MERMAID_THEMES.find((th) => th.id === themeId) ?? MERMAID_THEMES[0];
 
+  const handleParseError = useCallback((message: string, line?: number) => {
+    setParseError(message ? { message, line } : null);
+  }, []);
+
   const loadList = useCallback(async () => {
     try {
       const list = await api.listDiagrams();
@@ -552,7 +556,7 @@ export default function App() {
             mmdCode={mmdContent}
             themeConfig={themeConfig}
             darkMode={darkMode}
-            onParseError={(message, line) => setParseError(message ? { message, line } : null)}
+            onParseError={handleParseError}
           />
         </Box>
       </Box>

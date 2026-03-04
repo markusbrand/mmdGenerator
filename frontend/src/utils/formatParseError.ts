@@ -1,14 +1,19 @@
 /**
  * Converts raw Mermaid/parser error messages into user-friendly text.
+ * Handles repeated Mermaid generic errors ("Syntax error in text" / "mermaid version")
+ * so only one short message is shown instead of a long list.
  */
 export function formatParseError(rawMessage: string, line?: number): string {
   const msg = rawMessage.trim();
   if (!msg) return "Something went wrong while parsing the diagram.";
 
   const lower = msg.toLowerCase();
-
-  // Line reference to append when we have a line number
   const lineHint = line != null && line > 0 ? ` (See line ${line}.)` : "";
+
+  // Mermaid's generic "Syntax error in text" (often repeated) → single friendly message
+  if (lower.includes("syntax error in text")) {
+    return `Syntax error in the diagram.${lineHint}`;
+  }
 
   if (lower.includes("lexical error") || lower.includes("invalid character")) {
     return `Invalid character or word in the diagram. Please check the syntax.${lineHint}`;
