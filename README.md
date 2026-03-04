@@ -33,6 +33,10 @@ Open http://localhost:8000
 docker-compose up -d
 ```
 
+### Deploy on Raspberry Pi
+
+Use the pre-built arm64 image (no build on the Pi). See [Deployment → Deploy on Raspberry Pi](docs/deployment.md#deploy-on-raspberry-pi-quick) for one-command options (`docker run`, `docker compose -f docker-compose.raspberry-pi.yml up -d`, or the deploy script).
+
 ### Local development
 
 **Backend**

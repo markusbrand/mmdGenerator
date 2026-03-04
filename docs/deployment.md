@@ -1,5 +1,46 @@
 # Deployment
 
+## Deploy on Raspberry Pi (quick)
+
+On a Raspberry Pi 4 or 5 (64-bit), you can run the pre-built **arm64** image without building.
+
+1. **Install Docker** (once):
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   sudo usermod -aG docker $USER
+   ```
+   Log out and back in so the `docker` group applies.
+
+2. **Run the app** (choose one):
+
+   **Option A – docker run**
+   ```bash
+   docker run -d --name mmdgenerator --restart unless-stopped -p 8000:8000 \
+     -v mmdgenerator-data:/data -v mmdgenerator-logs:/logs \
+     -e MMD_DATA_DIR=/data -e LOG_DIR=/logs \
+     ghcr.io/markusbrand/mmdgenerator:latest
+   ```
+
+   **Option B – docker compose** (recommended)
+   ```bash
+   docker compose -f docker-compose.raspberry-pi.yml up -d
+   ```
+   Use the compose file from this repo (clone or copy `docker-compose.raspberry-pi.yml`). It uses the same image; override with `IMAGE=ghcr.io/your-org/mmdgenerator:latest` if you use your own GHCR image.
+
+   **Option C – deploy script** (for updates)
+   ```bash
+   export IMAGE_NAME=ghcr.io/markusbrand/mmdgenerator
+   bash scripts/deploy-on-pi.sh latest
+   ```
+
+3. **Open the app** at `http://<pi-ip>:8000` (e.g. `http://192.168.0.150:8000`).
+
+If the GHCR package is private, run `docker login ghcr.io` on the Pi (use a GitHub PAT with `read:packages`). Making the package **public** (repo → Packages → mmdgenerator → Package settings → Visibility) avoids login on the Pi.
+
+For **automated deploy on release** (GitHub Actions pulling and starting the container on the Pi), see [Raspberry Pi setup (for deploy workflow)](#raspberry-pi-setup-for-deploy-workflow) below.
+
+---
+
 ## Docker image
 
 The image is built for **linux/amd64** and **linux/arm64** (e.g. Raspberry Pi 5). It serves the FastAPI backend and the built frontend static files on port 8000.
@@ -16,10 +57,10 @@ docker run -d -p 8000:8000 \
 
 ### GHCR and GitHub Actions
 
-On release (published), the workflow **Build and Deploy** (`build-push.yml`) runs two jobs in order:
+The GHCR image (`ghcr.io/markusbrand/mmdgenerator`) is **public**. When you publish a new release, the workflow **Build and Deploy** (`build-push.yml`) runs automatically in two steps:
 
-1. **Build**: Builds the multi-arch image and pushes it to GitHub Container Registry (GHCR) with tags `:<version>` and `:latest`.
-2. **Deploy**: Runs **only after the build job has finished successfully**, on a self-hosted runner on the Pi. The Pi then pulls the new image and runs the container. No SSH from the internet is needed.
+1. **Build**: Builds the multi-arch image (linux/amd64, linux/arm64) and pushes it to GHCR with tags `:<version>` and `:latest`.
+2. **Deploy**: Runs **only after the build has finished**, on your self-hosted runner (e.g. named `raspberrypi`). That runner pulls the new image from GHCR and starts the container on the Pi. No SSH from the internet is needed.
 
 ### Raspberry Pi setup (for deploy workflow)
 

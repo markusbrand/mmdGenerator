@@ -1,0 +1,22 @@
+# Deploy on Raspberry Pi using the pre-built image from GHCR.
+# No build on the Pi; use the arm64 image from GitHub Container Registry.
+# Usage: docker compose -f docker-compose.raspberry-pi.yml up -d
+# Override image: IMAGE=ghcr.io/your-org/mmdgenerator:latest docker compose -f docker-compose.raspberry-pi.yml up -d
+# Apache-2.0 - mmdGenerator
+
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/markusbrand/mmdgenerator:latest}
+    ports:
+      - "8000:8000"
+    environment:
+      - MMD_DATA_DIR=/data
+      - LOG_DIR=/logs
+    volumes:
+      - mmd-data:/data
+      - mmd-logs:/logs
+    restart: unless-stopped
+
+volumes:
+  mmd-data:
+  mmd-logs:
