@@ -166,7 +166,7 @@ export default function App() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       if (currentId) {
         await api.updateDiagram(currentId, { title, mmd_content: mmdContent });
@@ -179,7 +179,7 @@ export default function App() {
     } catch (e) {
       console.error("Save failed", e);
     }
-  };
+  }, [currentId, title, mmdContent, loadList]);
 
   const handleUpload = (file: File) => {
     const reader = new FileReader();
@@ -204,7 +204,7 @@ export default function App() {
     clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(handleSave, 1500);
     return () => clearTimeout(saveTimeoutRef.current);
-  }, [mmdContent, title, autoUpdate, currentId]);
+  }, [mmdContent, title, autoUpdate, currentId, handleSave]);
 
   const handleDiagramTypeChange = (id: string) => {
     setDiagramTypeId(id);

@@ -16,9 +16,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
 import type { ThemeConfig } from "../config/themes";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { formatParseError } from "../utils/formatParseError";
+import * as exportApi from "../api/export";
 
 const CONTAINER_ID = "mermaid-container";
 const MIN_SCALE = 0.25;
@@ -86,11 +85,15 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
     }
   }, [scale]);
 
+  const handleParseErrorCallback = useCallback((message: string, line?: number) => {
+    onParseError?.(message, line);
+  }, [onParseError]);
+
   useEffect(() => {
     if (!mmdCode.trim()) {
       setSvg(null);
       setError(null);
-      onParseError?.("");
+      handleParseErrorCallback("");
       return;
     }
     const runId = ++runIdRef.current;
@@ -105,7 +108,7 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
         if (runId !== runIdRef.current) return;
         setSvg(svgStr);
         setError(null);
-        onParseError?.("");
+        handleParseErrorCallback("");
         el.innerHTML = svgStr;
         const svgEl = el.querySelector("svg");
         if (svgEl) {
@@ -120,9 +123,9 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
         const line = parseLineFromError(rawMsg);
         const friendlyMessage = formatParseError(rawMsg, line);
         setError(friendlyMessage);
-        onParseError?.(friendlyMessage, line);
+        handleParseErrorCallback(friendlyMessage, line);
       });
-  }, [mmdCode, initMermaid, onParseError]);
+  }, [mmdCode, initMermaid, handleParseErrorCallback]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -159,22 +162,10 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
   };
 
   const handleDownloadPng = async () => {
-    const containerEl = document.getElementById(CONTAINER_ID);
-    if (!containerEl || !svg) return;
+    if (!svg) return;
     setExporting(true);
     try {
-      // Export from rendered DOM so browser fonts (and exact appearance) are used; server-side Cairo often misses text
-      const canvas = await html2canvas(containerEl, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), "image/png", 1)
-      );
-      if (!blob) throw new Error("PNG export failed");
+      const blob = await exportApi.exportPng(svg, 2);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -189,27 +180,16 @@ export function DiagramView({ mmdCode, themeConfig, darkMode, onParseError }: Di
   };
 
   const handleDownloadPdf = async () => {
-    const containerEl = document.getElementById(CONTAINER_ID);
-    if (!containerEl || !svg) return;
+    if (!svg) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(containerEl, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const wMm = (canvas.width * 25.4) / 96;
-      const hMm = (canvas.height * 25.4) / 96;
-      const pdf = new jsPDF({
-        unit: "mm",
-        format: [wMm, hMm],
-        hotfixes: ["px_scaling"],
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, wMm, hMm);
-      pdf.save("diagram.pdf");
+      const blob = await exportApi.exportPdf(svg);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "diagram.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (e) {
       console.error("PDF export failed:", e);
     } finally {
