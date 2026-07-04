@@ -1,6 +1,7 @@
 # Copyright 2025 mmdGenerator Contributors. Licensed under the Apache License 2.0.
 """FastAPI application: diagrams API and export; serves frontend static in production."""
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,13 +10,24 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
 from app.api import diagrams, export
+from app.services.diagram_service import get_diagram_service
 
 setup_logging()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Connect to database
+    service = get_diagram_service()
+    await service.connect()
+    yield
+    # Shutdown: Close database connection
+    await service.disconnect()
 
 app = FastAPI(
     title="mmdGenerator",
     description="Mermaid diagram editor and exporter",
-    version="0.1.1",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
 settings = get_settings()
