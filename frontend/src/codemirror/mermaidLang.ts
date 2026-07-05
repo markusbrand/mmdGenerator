@@ -1,30 +1,27 @@
+import { LanguageSupport, StreamLanguage } from "@codemirror/language";
+
 /**
- * Simple Mermaid syntax highlighting for CodeMirror 6.
+ * Super basic Mermaid flowchart highlighting for CodeMirror 6.
  */
-import { StreamLanguage } from "@codemirror/language";
-
-const keywords =
-  "flowchart graph sequenceDiagram classDiagram stateDiagram erDiagram gantt pie journey gitGraph blockDiagram " +
-  "subgraph end direction LR RL TB BT class participant as link style click";
-
-const keywordSet = new Set(keywords.split(/\s+/));
-
-export const mermaidLanguage = StreamLanguage.define({
-  name: "mermaid",
-  startState: () => null,
-  token(stream) {
-    if (stream.eatSpace()) return null;
-    if (stream.match(/%%.*/)) return "lineComment";
-    if (stream.match(/"[^"]*"/)) return "string";
-    if (stream.match(/'[^']*'/)) return "string";
-    if (stream.match(/-->|--|==>|==|-\.->|\.->|<-\.-|<-\./)) return "keyword";
-    if (stream.match(/[\[\]{}()]/)) return "bracket";
-    if (stream.match(/[a-zA-Z_][a-zA-Z0-9_]*/)) {
-      const word = stream.current();
-      if (keywordSet.has(word)) return "keyword";
-      return null;
+const mermaidStream = {
+  token(stream: any) {
+    if (stream.match(/^%%/)) {
+      stream.skipToEnd();
+      return "comment";
+    }
+    if (stream.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap|timeline|quadrantChart|requirementDiagram|block-beta|architecture)/)) {
+      return "keyword";
+    }
+    if (stream.match(/^(TD|LR|BT|RL)/)) {
+      return "atom";
     }
     stream.next();
     return null;
-  },
-});
+  }
+};
+
+export const mermaidLanguage = StreamLanguage.define(mermaidStream);
+
+export function mermaid() {
+  return new LanguageSupport(mermaidLanguage);
+}

@@ -2,7 +2,7 @@
 # Apache-2.0 - mmdGenerator
 
 # ---- Frontend ----
-FROM node:20-alpine AS frontend
+FROM node:22-alpine AS frontend
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
@@ -10,7 +10,7 @@ COPY frontend/ .
 RUN npm run build
 
 # ---- Backend ----
-FROM python:3.11-slim AS backend
+FROM python:3.12-slim AS backend
 # Link image to repo so the package appears under the repo's Packages sidebar
 LABEL org.opencontainers.image.source=https://github.com/markusbrand/mmdGenerator
 WORKDIR /app
