@@ -1,4 +1,4 @@
-# Build multi-arch Docker image, push to GHCR, then deploy to Pi.
+# Build multi-arch Docker image, push to GHCR, then deploy to bosgame.
 # All steps run in order: deploy only starts after the image is available.
 name: Build and Deploy
 
@@ -48,7 +48,7 @@ jobs:
   deploy:
     needs: build
     if: github.event_name == 'release'
-    runs-on: [self-hosted, Linux, ARM64]
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Set version and image
         id: vars
@@ -66,10 +66,10 @@ jobs:
           set -e
           echo "Pulling ${IMAGE}..."
           docker pull "${IMAGE}"
-          docker stop mmdgenerator 2>/dev/null || true
-          docker rm mmdgenerator 2>/dev/null || true
-          docker run -d --name mmdgenerator --restart unless-stopped -p 8000:8000 \
-            -v mmdgenerator-data:/data -v mmdgenerator-logs:/logs \
+          docker stop mmdgenerator-app-1 2>/dev/null || true
+          docker rm mmdgenerator-app-1 2>/dev/null || true
+          docker run -d --name mmdgenerator-app-1 --restart unless-stopped -p 8000:8000 \
+            -v mmdgenerator_mmd-data:/data -v mmdgenerator_mmd-logs:/logs \
             -e MMD_DATA_DIR=/data -e LOG_DIR=/logs \
             "${IMAGE}"
           echo "Deployed ${IMAGE}"
