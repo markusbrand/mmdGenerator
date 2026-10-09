@@ -23,3 +23,6 @@ frontend/dist/
 .vscode/*
 !.vscode/extensions.json
 .DS_Store
+
+# GitHub Actions runner (service component, lives in-repo)
+/actions-runner-mmdgen/
